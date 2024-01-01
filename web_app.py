@@ -43,4 +43,5 @@ if user_menu == 'Team wise Rankings':
                                             team_names)
 
     rank_list = data_analysis.display_rank(rank_df, selected_country)
+    st.title(selected_country)
     st.dataframe(rank_list)
