@@ -2,53 +2,54 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def preprocess():
+def preprocess(path_to_file):
 
-    df = pd.read_csv('Fifa-world-cup_matches.csv')
+    df = pd.read_csv(path_to_file)
     return df
 
 
-def total_team():
+def total_teams(df):
 
-    global df
-    teams = df['team 1'].unique().tolist()
+    teams = df['team1'].unique().tolist()
     return teams
 
 
-def team_wise(team_name, column):
+def team_wise(df, team_name, column):
 
-    global df
-
-    column_1 = column + ' team 1'
-    column_2 = column + ' team 2'
-
+    column = column.lower()
+    column_1 = column + ' team1'
+    column_2 = column + ' team2'
+    df[column_1] = df[column_1].apply(lambda x: int(x))
+    df[column_2] = df[column_2].apply(lambda x: int(x))
     # creating team 1 and team 2 variable for storing goals
-    team_1 = df[df['team 1'] == team_name]
-    team_2 = df[df['team 2'] == team_name]
+    team_1 = df[df['team1'] == team_name]
+    team_2 = df[df['team2'] == team_name]
 
-    team_1 = sum(team_1[f'{column_1}'].tolist())
-    team_2 = sum(team_2[f'{column_2}'].tolist())
+    opp_team_scored1 = sum(team_2[column_1].tolist())
+    opp_team_scored2 = sum(team_1[column_2].tolist())
+
+    team_1 = sum(team_1[column_1].tolist())
+    team_2 = sum(team_2[column_2].tolist())
+
     total_goals_scored = team_1 + team_2
-
-    opp_team_scored1 = sum(team_2[f'{column_1}'].tolist())
-    opp_team_scored2 = sum(team_1[f'{column_2}'].tolist())
     total_opposition_scored = opp_team_scored1 + opp_team_scored2
 
     return total_goals_scored, total_opposition_scored
 
 
-def pie_chart(team_name, column):
+def pie_chart(df, team_name, column):
 
-    team_score, opp_score = team_wise(team_name, column)
+    team_score, opp_score = team_wise(df, team_name, column)
 
     # pie chart
 
     pie_chart = plt.pie([team_score, opp_score],
-                        labels=[f'{team_name}', 'Opposition'])
+                        labels=[f'{team_name}: {team_score}',
+                                f'Opposition: {opp_score}'])
     return pie_chart
 
 
-def football_calc(team, variable):
+def football_calc(df, team, variable):
 
     a = df[variable][df['team1'] == team].sum()
     variable = variable.replace("1", "2")
@@ -57,7 +58,7 @@ def football_calc(team, variable):
     return a + b
 
 
-def match_calc(team, variable):
+def match_calc(df, team, variable):
 
     a = df[variable][df['team1'] == team].count()
     variable = variable.replace("1", "2")
@@ -66,39 +67,44 @@ def match_calc(team, variable):
     return a + b
 
 
-def total_calc(names, var):
+def total_calc(df, names, var):
 
     total_attempts = {}
     for i in names:
-        value = football_calc(i, var)
+        value = football_calc(df, i, var)
         total_attempts[i] = value
 
     return total_attempts
 
 
-def total_matches(team_names):
+def total_matches(df, team_names):
 
     total_matches = {}
     for i in team_names:
-        value = match_calc(i, 'team1')
+        value = match_calc(df, i, 'team1')
         total_matches[i] = value
 
     return total_matches
 
 
-def new_dataframe(team_names, total_matches):
+def new_dataframe(df, team_names, total_matches):
 
-    global df
-    total_attempts = total_calc(team_names, 'total attempts team1')
-    total_assists = total_calc(team_names, 'assists team1')
-    total_on_target_attempts = total_calc(team_names,
+    total_attempts = total_calc(df, team_names, 'total attempts team1')
+    total_assists = total_calc(df, team_names, 'assists team1')
+    total_on_target_attempts = total_calc(df,
+                                          team_names,
                                           'on target attempts team1')
-    total_off_target_attempts = total_calc(team_names,
+    total_off_target_attempts = total_calc(df,
+                                           team_names,
                                            'off target attempts team1')
-    total_off_sides = total_calc(team_names, 'offsides team1')
-    total_passes_completed = total_calc(team_names, 'passes completed team1')
-    total_goal_prevention = total_calc(team_names, 'goal preventions team1')
-    total_goals = total_calc(team_names, 'number of goals team1')
+    total_off_sides = total_calc(df, team_names, 'offsides team1')
+    total_passes_completed = total_calc(df,
+                                        team_names,
+                                        'passes completed team1')
+    total_goal_prevention = total_calc(df,
+                                       team_names,
+                                       'goal preventions team1')
+    total_goals = total_calc(df, team_names, 'number of goals team1')
 
     new_df = pd.DataFrame(total_attempts.values(),
                           index=total_attempts.keys(),
@@ -155,7 +161,7 @@ def data_analyser(dataframe, column, matches):
     return a
 
 
-def rank_df(dataframe, columns, matches):
+def rank_data(dataframe, columns, matches):
 
     rank_df = pd.DataFrame(index=dataframe.index)
     for column in columns:
@@ -168,19 +174,19 @@ def rank_df(dataframe, columns, matches):
 
 def rank_calc(dataframe, team):
 
-    rank_list = {}
+    rank_list = []
     a = dataframe.columns.tolist()
     descending, ascending = a[:-2], a[-2:]
 
-    for i in ascending:
-        dataframe.sort_values(by=i, inplace=True)
+    for i in range(len(descending)):
+        dataframe.sort_values(by=descending[i], ascending=False, inplace=True)
         value = dataframe.index.get_loc(team)
-        rank_list[i] = f"#{value+1}"
+        rank_list.append(f"#{value+1}")
 
-    for i in descending:
-        dataframe.sort_values(by=i, ascending=False, inplace=True)
+    for i in range(len(ascending)):
+        dataframe.sort_values(by=ascending[i], inplace=True)
         value = dataframe.index.get_loc(team)
-        rank_list[i] = f"#{value+1}"
+        rank_list.append(f"#{value+1}")
 
     return rank_list
 
