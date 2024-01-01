@@ -85,6 +85,7 @@ def total_matches(team_names):
 
     return total_matches
 
+
 def new_dataframe(team_names, total_matches):
 
     global df
@@ -154,3 +155,39 @@ def data_analyser(dataframe, column, matches):
     return a
 
 
+def rank_df(dataframe, columns, matches):
+
+    rank_df = pd.DataFrame(index=dataframe.index)
+    for column in columns:
+        b = column.replace("total", "Average")
+        rank_df[b] = data_analyser(dataframe, column, matches)
+
+    rank_df = rank_df.drop(rank_df.columns[-1], axis=1)
+    return rank_df
+
+
+def rank_calc(dataframe, team):
+
+    rank_list = {}
+    a = dataframe.columns.tolist()
+    descending, ascending = a[:-2], a[-2:]
+
+    for i in ascending:
+        dataframe.sort_values(by=i, inplace=True)
+        value = dataframe.index.get_loc(team)
+        rank_list[i] = f"#{value+1}"
+
+    for i in descending:
+        dataframe.sort_values(by=i, ascending=False, inplace=True)
+        value = dataframe.index.get_loc(team)
+        rank_list[i] = f"#{value+1}"
+
+    return rank_list
+
+
+def display_rank(dataframe, team):
+
+    column_names = dataframe.columns.tolist()
+    rankings = {'Basis': column_names, 'Ranking': rank_calc(dataframe, team)}
+
+    return pd.DataFrame(rankings)
