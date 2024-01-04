@@ -13,3 +13,6 @@ This project is about analysing the 2022 Fifa World cup.
 # Resources
 
 1. [Dataset](https://www.kaggle.com/datasets/die9origephit/fifa-world-cup-2022-complete-dataset)
+
+
+[Websaite](https://fifa-world-cup-analysis-hxhtydo2y8ihj3qept4poy.streamlit.app/)
